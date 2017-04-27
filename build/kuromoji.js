@@ -6710,6 +6710,80 @@ c.name=m.join("")}if(0<(c.h&16)){m=[];for(k=0;0<(g=h[l++]);)m[k++]=String.fromCh
 d=(h[l++]|h[l++]<<8|h[l++]<<16|h[l++]<<24)>>>0;(a.length&4294967295)!==d&&n(Error("invalid input size: "+(a.length&4294967295)+" / "+d));this.m.push(c);this.c=l}this.s=!0;var y=this.m,s,M,S=0,T=0,C;s=0;for(M=y.length;s<M;++s)T+=y[s].data.length;if(u){C=new Uint8Array(T);for(s=0;s<M;++s)C.set(y[s].data,S),S+=y[s].data.length}else{C=[];for(s=0;s<M;++s)C[s]=y[s].data;C=Array.prototype.concat.apply([],C)}return C};r("Zlib.Gunzip",$);r("Zlib.Gunzip.prototype.decompress",$.prototype.g);r("Zlib.Gunzip.prototype.getMembers",$.prototype.G);}).call(this); 
 
 },{}],6:[function(require,module,exports){
+module.exports={
+  "name": "kuromoji",
+  "description": "JavaScript implementation of Japanese morphological analyzer",
+  "version": "0.1.2",
+  "author": "Takuya Asano <takuya.a@gmail.com>",
+  "browser": {
+    "./src/loader/NodeDictionaryLoader.js": "./src/loader/BrowserDictionaryLoader.js"
+  },
+  "bugs": {
+    "url": "https://github.com/takuyaa/kuromoji.js/issues"
+  },
+  "dependencies": {
+    "async": "^2.0.1",
+    "doublearray": "0.0.2",
+    "jaCodeMap": "0.0.4",
+    "zlibjs": "^0.2.0"
+  },
+  "devDependencies": {
+    "browserify": "^13.1.0",
+    "chai": "^3.2.0",
+    "coveralls": "^2.11.2",
+    "del": "^2.2.1",
+    "event-stream": "^3.3.4",
+    "gulp": "^3.8.10",
+    "gulp-bower": "0.0.13",
+    "gulp-bump": "^2.2.0",
+    "gulp-conventional-changelog": "^1.1.0",
+    "gulp-gh-pages": "^0.5.4",
+    "gulp-git": "^1.11.0",
+    "gulp-gzip": "^1.2.0",
+    "gulp-istanbul": "^1.0.0",
+    "gulp-jsdoc": "^0.1.4",
+    "gulp-jshint": "^2.0.1",
+    "gulp-mocha": "^3.0.0",
+    "gulp-webserver": "^0.9.1",
+    "mecab-ipadic-seed": "0.0.2",
+    "minimist": "^1.2.0",
+    "mocha-lcov-reporter": "^1.2.0",
+    "run-sequence": "^1.0.1",
+    "vinyl-source-stream": "^1.1.0"
+  },
+  "homepage": "https://github.com/takuyaa/kuromoji.js",
+  "keywords": [
+    "japanese",
+    "morphological analyzer",
+    "nlp",
+    "pos",
+    "pos tagger",
+    "tokenizer"
+  ],
+  "license": "Apache-2.0",
+  "main": "./src/kuromoji.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/takuyaa/kuromoji.js.git"
+  },
+  "scripts": {
+    "build": "gulp build",
+    "build-demo": "gulp build-demo",
+    "build-dict": "gulp build-dict",
+    "clean": "gulp clean",
+    "coverage": "gulp coverage",
+    "deploy": "gulp deploy",
+    "jsdoc": "gulp jsdoc",
+    "lint": "gulp lint",
+    "release": "gulp release",
+    "test": "gulp test",
+    "version": "gulp version",
+    "watch": "gulp watch",
+    "webserver": "gulp webserver"
+  }
+}
+
+},{}],7:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -6840,7 +6914,7 @@ Tokenizer.prototype.getLattice = function (text) {
 
 module.exports = Tokenizer;
 
-},{"./util/IpadicFormatter":22,"./viterbi/ViterbiBuilder":24,"./viterbi/ViterbiSearcher":27}],7:[function(require,module,exports){
+},{"./util/IpadicFormatter":23,"./viterbi/ViterbiBuilder":25,"./viterbi/ViterbiSearcher":28}],8:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -6897,7 +6971,7 @@ TokenizerBuilder.prototype.build = function (callback) {
 
 module.exports = TokenizerBuilder;
 
-},{"./Tokenizer":6,"./loader/NodeDictionaryLoader":19}],8:[function(require,module,exports){
+},{"./Tokenizer":7,"./loader/NodeDictionaryLoader":20}],9:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -6936,7 +7010,7 @@ function CharacterClass(class_id, class_name, is_always_invoke, is_grouping, max
 
 module.exports = CharacterClass;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7143,7 +7217,7 @@ CharacterDefinition.prototype.lookup = function (ch) {
 
 module.exports = CharacterDefinition;
 
-},{"../util/SurrogateAwareString":23,"./CharacterClass":8,"./InvokeDefinitionMap":12}],10:[function(require,module,exports){
+},{"../util/SurrogateAwareString":24,"./CharacterClass":9,"./InvokeDefinitionMap":13}],11:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7204,7 +7278,7 @@ ConnectionCosts.prototype.loadConnectionCosts = function (connection_costs_buffe
 
 module.exports = ConnectionCosts;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7288,7 +7362,7 @@ DynamicDictionaries.prototype.loadUnknownDictionaries = function (unk_buffer, un
 
 module.exports = DynamicDictionaries;
 
-},{"./ConnectionCosts":10,"./TokenInfoDictionary":13,"./UnknownDictionary":14,"doublearray":2}],12:[function(require,module,exports){
+},{"./ConnectionCosts":11,"./TokenInfoDictionary":14,"./UnknownDictionary":15,"doublearray":2}],13:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7400,7 +7474,7 @@ InvokeDefinitionMap.prototype.toBuffer = function () {
 
 module.exports = InvokeDefinitionMap;
 
-},{"../util/ByteBuffer":21,"./CharacterClass":8}],13:[function(require,module,exports){
+},{"../util/ByteBuffer":22,"./CharacterClass":9}],14:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7554,7 +7628,7 @@ TokenInfoDictionary.prototype.getFeatures = function (token_info_id_str) {
 
 module.exports = TokenInfoDictionary;
 
-},{"../util/ByteBuffer":21}],14:[function(require,module,exports){
+},{"../util/ByteBuffer":22}],15:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7614,7 +7688,7 @@ UnknownDictionary.prototype.loadUnknownDictionaries = function (unk_buffer, unk_
 
 module.exports = UnknownDictionary;
 
-},{"../util/ByteBuffer":21,"./CharacterDefinition":9,"./TokenInfoDictionary":13}],15:[function(require,module,exports){
+},{"../util/ByteBuffer":22,"./CharacterDefinition":10,"./TokenInfoDictionary":14}],16:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7684,7 +7758,7 @@ CharacterDefinitionBuilder.prototype.build = function () {
 
 module.exports = CharacterDefinitionBuilder;
 
-},{"../CharacterDefinition":9,"../InvokeDefinitionMap":12}],16:[function(require,module,exports){
+},{"../CharacterDefinition":10,"../InvokeDefinitionMap":13}],17:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7756,7 +7830,7 @@ ConnectionCostsBuilder.prototype.build = function () {
 
 module.exports = ConnectionCostsBuilder;
 
-},{"../ConnectionCosts":10}],17:[function(require,module,exports){
+},{"../ConnectionCosts":11}],18:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7916,7 +7990,7 @@ DictionaryBuilder.prototype.buildDoubleArray = function () {
 
 module.exports = DictionaryBuilder;
 
-},{"../DynamicDictionaries":11,"../TokenInfoDictionary":13,"../UnknownDictionary":14,"./CharacterDefinitionBuilder":15,"./ConnectionCostsBuilder":16,"doublearray":2}],18:[function(require,module,exports){
+},{"../DynamicDictionaries":12,"../TokenInfoDictionary":14,"../UnknownDictionary":15,"./CharacterDefinitionBuilder":16,"./ConnectionCostsBuilder":17,"doublearray":2}],19:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7946,12 +8020,13 @@ var kuromoji = {
     },
     dictionaryBuilder: function () {
         return new DictionaryBuilder();
-    }
+    },
+    version: require('../package.json').version
 };
 
 module.exports = kuromoji;
 
-},{"./TokenizerBuilder":7,"./dict/builder/DictionaryBuilder":17}],19:[function(require,module,exports){
+},{"../package.json":6,"./TokenizerBuilder":8,"./dict/builder/DictionaryBuilder":18}],20:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8019,7 +8094,7 @@ BrowserDictionaryLoader.prototype.loadArrayBuffer = function (url, callback) {
 
 module.exports = BrowserDictionaryLoader;
 
-},{"./DictionaryLoader":20,"zlibjs/bin/gunzip.min.js":5}],20:[function(require,module,exports){
+},{"./DictionaryLoader":21,"zlibjs/bin/gunzip.min.js":5}],21:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8158,7 +8233,7 @@ DictionaryLoader.prototype.load = function (load_callback) {
 
 module.exports = DictionaryLoader;
 
-},{"../dict/DynamicDictionaries":11,"async":1,"path":3}],21:[function(require,module,exports){
+},{"../dict/DynamicDictionaries":12,"async":1,"path":3}],22:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8445,7 +8520,7 @@ ByteBuffer.prototype.getString = function (index) {
 
 module.exports = ByteBuffer;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8514,7 +8589,7 @@ IpadicFormatter.prototype.formatUnknownEntry = function (word_id, position, type
 
 module.exports = IpadicFormatter;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8607,7 +8682,7 @@ SurrogateAwareString.isSurrogatePair = function (ch) {
 
 module.exports = SurrogateAwareString;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8710,7 +8785,7 @@ ViterbiBuilder.prototype.build = function (sentence_str) {
 
 module.exports = ViterbiBuilder;
 
-},{"../util/SurrogateAwareString":23,"./ViterbiLattice":25,"./ViterbiNode":26}],25:[function(require,module,exports){
+},{"../util/SurrogateAwareString":24,"./ViterbiLattice":26,"./ViterbiNode":27}],26:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8772,7 +8847,7 @@ ViterbiLattice.prototype.appendEos = function () {
 
 module.exports = ViterbiLattice;
 
-},{"./ViterbiNode":26}],26:[function(require,module,exports){
+},{"./ViterbiNode":27}],27:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8823,7 +8898,7 @@ function ViterbiNode(node_name, node_cost, start_pos, length, type, left_id, rig
 
 module.exports = ViterbiNode;
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8927,5 +9002,5 @@ ViterbiSearcher.prototype.backward = function (lattice) {
 
 module.exports = ViterbiSearcher;
 
-},{}]},{},[18])(18)
+},{}]},{},[19])(19)
 });
