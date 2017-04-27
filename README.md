@@ -103,3 +103,31 @@ The function tokenize() returns an JSON array like this:
 (This is defined in src/util/IpadicFormatter.js)
 
 See also [JSDoc page](https://takuyaa.github.io/kuromoji.js/jsdoc/) in details.
+
+## 追加
+
+関数: auto
+ - 変換: 全角→半角
+ - 変換: 大文字→小文字
+ - 名詞のみ抽出
+
+```
+Tokenizer.prototype.auto = function(text) {
+  var map = {
+    '一般': true,
+    '固有名詞': true,
+    '数': true,
+    'サ変接続': true,
+    '形容動詞語幹': true,
+    '副詞可能': true
+  };
+  text = jaCodeMap.auto(text).toLowerCase();
+  var tokens = this.tokenize(text);
+  return Object.keys(tokens.reduce(function(memo, token) {
+    if (map[token.pos_detail_1]) {
+      memo[token.surface_form] = true;
+    }
+    return memo;
+  }, {}));
+};
+```
