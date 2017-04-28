@@ -64,20 +64,22 @@ Tokenizer.splitByPunctuation = function(input) {
 /**
  * 一般的な名詞を抽出するユーティリティ
  */
+function map(array) {
+  return array.reduce(function(memo, v) {
+    memo[v] = true;
+    return memo;
+  }, {});
+}
+var automap = map(['一般', '固有名詞', '数', 'サ変接続', '形容動詞語幹', '副詞可能']);
+var autostop = map(['、', ',']);
 Tokenizer.prototype.auto = function(text) {
-  var map = {
-    '一般': true,
-    '固有名詞': true,
-    '数': true,
-    'サ変接続': true,
-    '形容動詞語幹': true,
-    '副詞可能': true
-  };
   text = jaCodeMap.auto(text).toLowerCase();
   var tokens = this.tokenize(text);
   return Object.keys(tokens.reduce(function(memo, token) {
-    if (map[token.pos_detail_1]) {
-      memo[token.basic_form] = true;
+    if (automap[token.pos_detail_1]) {
+      var key = (token.word_type === 'KNOWN') ? token.basic_form : token.surface_form;
+      if (!autostop[key])
+        memo[key] = true;
     }
     return memo;
   }, {}));
