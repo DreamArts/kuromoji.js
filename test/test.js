@@ -6,7 +6,7 @@ const dicPath = '../dict/';
 kuromoji.builder({ dicPath }).build(function (err, tokenizer) {
   // tokenizer is ready
 
-  var text = "j:com com 合い jcom Y!mobile、SoftBank, J:COM ";
+  var text = "jj:com com 合い jcom Y!mobile、SoftBank, J:COM ";
   //戸建てに住む。おい、ふせよ。戸建アパート。ジェイコムショップセキチュー。ＤｏＣｏＭｏサービス。docomoサービス";
 
   text = jaCodeMap.auto(text).toLowerCase();
