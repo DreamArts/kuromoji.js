@@ -112,22 +112,49 @@ See also [JSDoc page](https://takuyaa.github.io/kuromoji.js/jsdoc/) in details.
  - 名詞のみ抽出
 
 ```
+/**
+ * 一般的な名詞を抽出するユーティリティ
+ *
+ * 未知語処理の定義
+ * https://taku910.github.io/mecab/unk.html
+ */
+function map(array) {
+  return array.reduce(function(memo, v) {
+    memo[v] = true;
+    return memo;
+  }, {});
+}
+var automap = map(['一般', '固有名詞', '数', 'サ変接続', '形容動詞語幹', '副詞可能', 'アルファベット']);
+var autostop = map(['、', "～", '？', ',', '.', "#", '-']);
 Tokenizer.prototype.auto = function(text) {
-  var map = {
-    '一般': true,
-    '固有名詞': true,
-    '数': true,
-    'サ変接続': true,
-    '形容動詞語幹': true,
-    '副詞可能': true
-  };
   text = jaCodeMap.auto(text).toLowerCase();
   var tokens = this.tokenize(text);
   return Object.keys(tokens.reduce(function(memo, token) {
-    if (map[token.pos_detail_1]) {
-      memo[token.surface_form] = true;
+    if (automap[token.pos_detail_1]) {
+      var key = (token.word_type === 'KNOWN') ? token.basic_form : token.surface_form;
+      if (!autostop[key])
+        memo[key] = true;
     }
     return memo;
   }, {}));
 };
+
+```
+
+## カスタマイズ
+### [0-9] の連続を1つの形態素とする
+
+Noun.number.csv
+```
+NUMERIC,1295,1295,0,名詞,数,*,*,*,*,*
+```
+
+### [a-zA-Z] の連続を1つの形態素となりやすくする
+```
+ALPHA,1285,1285,4000,名詞,一般,*,*,*,*,*
+ALPHA,1293,1293,4000,名詞,固有名詞,地域,一般,*,*,*
+ALPHA,1292,1292,4000,名詞,固有名詞,組織,*,*,*,*
+ALPHA,1289,1289,4000,名詞,固有名詞,人名,一般,*,*,*
+ALPHA,1288,1288,4000,名詞,固有名詞,一般,*,*,*,*
+ALPHA,3,3,4000,感動詞,*,*,*,*,*,*
 ```
