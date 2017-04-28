@@ -71,7 +71,7 @@ function map(array) {
   }, {});
 }
 var automap = map(['一般', '固有名詞', '数', 'サ変接続', '形容動詞語幹', '副詞可能', 'アルファベット']);
-var autostop = map(['、', ',']);
+var autostop = map(['、', ',', '.']);
 Tokenizer.prototype.auto = function(text) {
   text = jaCodeMap.auto(text).toLowerCase();
   var tokens = this.tokenize(text);
