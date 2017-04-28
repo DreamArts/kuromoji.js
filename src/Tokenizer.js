@@ -77,7 +77,7 @@ Tokenizer.prototype.auto = function(text) {
   var tokens = this.tokenize(text);
   return Object.keys(tokens.reduce(function(memo, token) {
     if (map[token.pos_detail_1]) {
-      memo[token.surface_form] = true;
+      memo[token.basic_form] = true;
     }
     return memo;
   }, {}));
