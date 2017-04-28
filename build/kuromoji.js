@@ -5478,7 +5478,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 })));
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":4}],2:[function(require,module,exports){
+},{"_process":5}],2:[function(require,module,exports){
 // Copyright (c) 2014 Takuya Asano All Rights Reserved.
 
 (function () {
@@ -6272,6 +6272,303 @@ Object.defineProperty(exports, '__esModule', { value: true });
 })();
 
 },{}],3:[function(require,module,exports){
+var	strCodeMap = {},
+	maps = {
+		// half-width
+		hNum: /[0-9]/g,
+		hAlpha: /[A-Za-z]/g,
+		hAlphaUC: /[A-Z]/g,
+		hAlphaLC: /[a-z]/g,
+		// ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ
+		hKana: /[\uff66-\uff9d]/g,
+		// ガギグゲゴザジズゼゾダヂヅデドバパビピブプベペボポヴ
+		hKanaD: /([\uff73\uff76-\uff84]\uff9e|[\uff8a-\uff8e][\uff9e\uff9f])/g,
+		// ()[]{}❲❳⟪⟫｡｢｣､･
+		hPunct: /[\(\)\[\]{}❲❳⟪⟫｡｢｣､･]/g,
+		//  !"#$%&'*+,-./:;<=>?@\^_`|~¢£¯
+		hSym: "[ !\"#$%&'*+,-./:;<=>?@^_`|~¢£¯\\\\]",
+		// full-width
+		// ０-９ -> \uff10-\uff19
+		zNum: /[\uff10-\uff19]/g,
+		// Ａ-Ｚａ-ｚ
+		zAlpha: /[\uff21-\uff3a\uff41-\uff5a]/g,
+		// Ａ-Ｚ -> \uff21-\uff3a
+		zAlphaUC: /[\uff21-\uff3a]/g,
+		// ａ-ｚ -> \uff41-\uff5a
+		zAlphaLC: /[\uff41-\uff5a]/g,
+		// ァアィイゥウェエォオカキクケコサシスセソタチッツテトナニヌネノハヒフヘホマミムメモャヤュユョヨラリルレロワヲンー
+		zKana: /[\u30a1-\u30ab\u30ad\u30af\u30b1\u30b3\u30b5\u30b7\u30b9\u30bb\u30bd\u30bf\u30c1\u30c3\u30c4\u30c6\u30c8\u30ca-\u30cf\u30d2\u30d5\u30d8\u30db\u30de\u30df\u30e0-\u30ed\u30ef\u30f2\u30f3]/g,
+		// ガギグゲゴザジズゼゾダヂヅデドバパビピブプベペボポヴ
+		zKanaD: /[\u30ac\u30ae\u30b0\u30b2\u30b4\u30b6\u30b8\u30ba\u30bc\u30be\u30c0\u30c2\u30c5\u30c7\u30c9\u30d0\u30d1\u30d3\u30d4\u30d6\u30d7\u30d9\u30da\u30dc\u30dd\u30f4]/g,
+		// japanese punctuation mark
+		// 、。《》「」〔〕・ー（）［］｛｝
+		zPunct: /[\u3001\u3002\u300a\u300b\u300c\u300d\u3014\u3015\u30fb\u30fc\uff08\uff09\uff3b\uff3d\uff5b\uff5d]/g,
+		// 　！＂＃＄％＆＇＊＋，－．／：；＜＝＞？＠＼＾＿｀｜～￠￡￣
+		zSym: /[\u3000\uff01-\uff0f\uff1a-\uff20\uff3c\uff3e\uff3f\uff40\uff5c\uff5e\uffe0\uffe1\uffe3]/g,
+		autoSym: /[❲❳⟪⟫｡｢｣､･!＂＇，．\\＾｀]/g,
+	},
+	code2code = function(code){
+		return ( strCodeMap[code] ) ? strCodeMap[code] : '';
+	};
+
+
+function Init()
+{
+	var zCode = '０１２３４５６７８９ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚアイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンーァィゥェォャュョッ、。《》「」〔〕・（）［］｛｝　！＂＃＄％＆＇＊＋，－．／：；＜＝＞？＠＾＿｀｜～￠￡￣＼',
+		hCode = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜｦﾝｰｧｨｩｪｫｬｭｮｯ､｡⟪⟫｢｣❲❳･()[]{} !"#$%&\'*+,-./:;<=>?@^_`|~¢£¯\\',
+		key,val,i;
+	
+	module.exports.addCodeMap( zCode, hCode );
+	zCode = 'ヴガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポ'.split('');
+	// ｳﾞｶﾞｷﾞｸﾞｹﾞｺﾞｻﾞｼﾞｽﾞｾﾞｿﾞﾀﾞﾁﾞﾂﾞﾃﾞﾄﾞﾊﾞﾋﾞﾌﾞﾍﾞﾎﾞﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ
+	hCode = 'ｳﾞ,ｶﾞ,ｷﾞ,ｸﾞ,ｹﾞ,ｺﾞ,ｻﾞ,ｼﾞ,ｽﾞ,ｾﾞ,ｿﾞ,ﾀﾞ,ﾁﾞ,ﾂﾞ,ﾃﾞ,ﾄﾞ,ﾊﾞ,ﾋﾞ,ﾌﾞ,ﾍﾞ,ﾎﾞ,ﾊﾟ,ﾋﾟ,ﾌﾟ,ﾍﾟ,ﾎﾟ'.split(',');
+	module.exports.addCodeMap( zCode, hCode );
+	
+	maps.hSym = new RegExp( maps.hSym, 'g' );
+};
+
+
+module.exports.addCodeMap = function( code1, code2 )
+{
+	var key,val,len;
+	
+	if( typeof code1 === 'string' )
+	{
+		var map1 = code1.split(''),
+			map2 = code2.split('');
+		
+		len = map1.length;
+		for( var i = 0; i < len; i++ ){
+			key = map1[i];
+			val = map2[i];
+			strCodeMap[key] = val;
+			strCodeMap[val] = key;
+		}
+	}
+	else if( typeof code1 === 'object' )
+	{
+		if( code1 instanceof Array )
+		{
+			len = code1.length;
+			for( var i = 0; i < len; i++ ){
+				key = code1[i];
+				val = code2[i];
+				strCodeMap[key] = val;
+				strCodeMap[val] = key;
+			}
+		}
+		else
+		{
+			for( var p in code1 ){
+				key = p;
+				val = code1[p];
+				strCodeMap[key] = val;
+				strCodeMap[val] = key;
+			}
+		}
+	}
+};
+
+module.exports.auto = function( str )
+{
+	str = str.replace( maps.zNum, code2code );
+	str = str.replace( maps.zAlpha, code2code );
+	str = str.replace( maps.hKanaD, code2code );
+	str = str.replace( maps.hKana, code2code );
+	str = str.replace( maps.autoSym, code2code );
+	return str;
+};
+
+module.exports.manual = function( str, list )
+{
+	var len = list.length;
+	
+	for( var i = 0; i < len; i++ )
+	{
+		if( maps[list[i]] ){
+			str = str.replace( maps[list[i]], code2code );
+		}
+		else {
+			str = str.replace( list[i], code2code );
+		}
+	}
+	return str;
+};
+
+// MARK: Full-Half
+module.exports.f2h = function( str )
+{
+	str = str.replace( maps.zNum, code2code );
+	str = str.replace( maps.zAlpha, code2code );
+	str = str.replace( maps.zKana, code2code );
+	str = str.replace( maps.zKanaD, code2code );
+	str = str.replace( maps.zPunct, code2code );
+	str = str.replace( maps.zSym, code2code );
+	return str;
+};
+
+module.exports.f2hNum = function( str )
+{
+	str = str.replace( maps.zNum, code2code );
+	return str;
+};
+
+module.exports.f2hAlpha = function( str )
+{
+	str = str.replace( maps.zAlpha, code2code );
+	return str;
+};
+module.exports.f2hAlphaLC = function( str )
+{
+	str = str.replace( maps.zAlphaLC, code2code );
+	return str;
+};
+module.exports.f2hAlphaUC = function( str )
+{
+	str = str.replace( maps.zAlphaUC, code2code );
+	return str;
+};
+module.exports.f2hKana = function( str )
+{
+	str = str.replace( maps.zKana, code2code );
+	return str;
+};
+
+module.exports.f2hKanaD = function( str )
+{
+	str = str.replace( maps.zKanaD, code2code );
+	return str;
+};
+
+module.exports.f2hKanaAll = function( str )
+{
+	str = str.replace( maps.zKana, code2code );
+	str = str.replace( maps.zKanaD, code2code );
+	return str;
+};
+
+module.exports.f2hPunct = function( str )
+{
+	str = str.replace( maps.zPunct, code2code );
+	return str;
+};
+
+module.exports.f2hSym = function( str )
+{
+	str = str.replace( maps.zSym, code2code );
+	return str;
+};
+
+// MARK: Half-Full
+module.exports.h2f = function( str )
+{
+	str = str.replace( maps.hNum, code2code );
+	str = str.replace( maps.hAlpha, code2code );
+	str = str.replace( maps.hKanaD, code2code );
+	str = str.replace( maps.hKana, code2code );
+	str = str.replace( maps.hPunct, code2code );
+	str = str.replace( maps.hSym, code2code );
+	return str;
+};
+
+module.exports.h2fNum = function( str )
+{
+	str = str.replace( maps.hNum, code2code );
+	return str;
+};
+
+module.exports.h2fAlpha = function( str )
+{
+	str = str.replace( maps.hAlpha, code2code );
+	return str;
+};
+
+module.exports.h2fAlphaLC = function( str )
+{
+	str = str.replace( maps.hAlphaLC, code2code );
+	return str;
+};
+
+module.exports.h2fAlphaUC = function( str )
+{
+	str = str.replace( maps.hAlphaUC, code2code );
+	return str;
+};
+
+module.exports.h2fKana = function( str )
+{
+	str = str.replace( maps.hKana, code2code );
+	return str;
+};
+
+module.exports.h2fKanaD = function( str )
+{
+	str = str.replace( maps.hKanaD, code2code );
+	return str;
+};
+module.exports.h2fKanaAll = function( str )
+{
+	str = str.replace( maps.hKanaD, code2code );
+	str = str.replace( maps.hKana, code2code );
+	return str;
+};
+
+module.exports.h2fPunct = function( str )
+{
+	str = str.replace( maps.hPunct, code2code );
+	return str;
+};
+
+module.exports.h2fSym = function( str )
+{
+	str = str.replace( maps.hSym, code2code );
+	return str;
+};
+
+
+Init();
+
+
+/*
+function Check()
+{
+	var ary = [],
+		// full-width
+		zNum = '０１２３４５６７８９',
+		zAlphaUC = 'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',
+		zAlphaLC = 'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ',
+		zKana = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンーァィゥェォャュョッ',
+		zKanaD = 'ガギグゲゴザジズゼゾダヂヅデドバパビピブプベペボポヴ',
+		// japanese punctuation mark
+		zPunct = '、。《》「」〔〕・（）［］｛｝',
+		zSym = '　！＂＃＄％＆＇＊＋，－．／：；＜＝＞？＠＼＾＿｀｜～￠￡￣',
+		// half-width
+		hKana = 'ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ',
+		hPunct = '､｡⟪⟫｢｣❲❳･()[]{}',
+		hCode = ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~｡｢｣､･ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ',
+		target = zKana,
+		str = '', code = '',
+		char;
+	
+	for( var i = 0; i < target.length; i++ ){
+		ary.push( target.substr( i, 1 ).charCodeAt(0) );
+		// console.log( hCode.substr( i, 1 ) + ' -> ' + hCode.substr( i, 1 ).charCodeAt(0).toString(16) );
+	}
+	
+	ary = ary.sort( function(l,r){ 	return ( l < r ) ? -1 : ( ( l > r ) ? 1 : 0 ); } );
+	while( ary.length ){
+		char = ary.shift();
+		str += String.fromCharCode( char );
+		code += '\\u' + char.toString(16);
+		console.log( String.fromCharCode( char ) + ' -> \\u' + char.toString(16) );
+	}
+	console.log( str );
+	console.log( code );
+}
+Check();
+*/
+
+},{}],4:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -6499,7 +6796,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":4}],4:[function(require,module,exports){
+},{"_process":5}],5:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -6681,7 +6978,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /** @license zlib.js 2012 - imaya [ https://github.com/imaya/zlib.js ] The MIT License */(function() {'use strict';function n(e){throw e;}var q=void 0,aa=this;function r(e,c){var d=e.split("."),b=aa;!(d[0]in b)&&b.execScript&&b.execScript("var "+d[0]);for(var a;d.length&&(a=d.shift());)!d.length&&c!==q?b[a]=c:b=b[a]?b[a]:b[a]={}};var u="undefined"!==typeof Uint8Array&&"undefined"!==typeof Uint16Array&&"undefined"!==typeof Uint32Array&&"undefined"!==typeof DataView;new (u?Uint8Array:Array)(256);var v;for(v=0;256>v;++v)for(var w=v,ba=7,w=w>>>1;w;w>>>=1)--ba;function x(e,c,d){var b,a="number"===typeof c?c:c=0,f="number"===typeof d?d:e.length;b=-1;for(a=f&7;a--;++c)b=b>>>8^z[(b^e[c])&255];for(a=f>>3;a--;c+=8)b=b>>>8^z[(b^e[c])&255],b=b>>>8^z[(b^e[c+1])&255],b=b>>>8^z[(b^e[c+2])&255],b=b>>>8^z[(b^e[c+3])&255],b=b>>>8^z[(b^e[c+4])&255],b=b>>>8^z[(b^e[c+5])&255],b=b>>>8^z[(b^e[c+6])&255],b=b>>>8^z[(b^e[c+7])&255];return(b^4294967295)>>>0}
 var A=[0,1996959894,3993919788,2567524794,124634137,1886057615,3915621685,2657392035,249268274,2044508324,3772115230,2547177864,162941995,2125561021,3887607047,2428444049,498536548,1789927666,4089016648,2227061214,450548861,1843258603,4107580753,2211677639,325883990,1684777152,4251122042,2321926636,335633487,1661365465,4195302755,2366115317,997073096,1281953886,3579855332,2724688242,1006888145,1258607687,3524101629,2768942443,901097722,1119000684,3686517206,2898065728,853044451,1172266101,3705015759,
 2882616665,651767980,1373503546,3369554304,3218104598,565507253,1454621731,3485111705,3099436303,671266974,1594198024,3322730930,2970347812,795835527,1483230225,3244367275,3060149565,1994146192,31158534,2563907772,4023717930,1907459465,112637215,2680153253,3904427059,2013776290,251722036,2517215374,3775830040,2137656763,141376813,2439277719,3865271297,1802195444,476864866,2238001368,4066508878,1812370925,453092731,2181625025,4111451223,1706088902,314042704,2344532202,4240017532,1658658271,366619977,
@@ -6709,11 +7006,11 @@ $.prototype.g=function(){for(var e=this.input.length;this.c<e;){var c=new B,d=q,
 c.name=m.join("")}if(0<(c.h&16)){m=[];for(k=0;0<(g=h[l++]);)m[k++]=String.fromCharCode(g);c.K=m.join("")}0<(c.h&2)&&(c.C=x(h,0,l)&65535,c.C!==(h[l++]|h[l++]<<8)&&n(Error("invalid header crc16")));d=h[h.length-4]|h[h.length-3]<<8|h[h.length-2]<<16|h[h.length-1]<<24;h.length-l-4-4<512*d&&(f=d);b=new G(h,{index:l,bufferSize:f});c.data=a=b.g();l=b.c;c.L=t=(h[l++]|h[l++]<<8|h[l++]<<16|h[l++]<<24)>>>0;x(a,q,q)!==t&&n(Error("invalid CRC-32 checksum: 0x"+x(a,q,q).toString(16)+" / 0x"+t.toString(16)));c.M=
 d=(h[l++]|h[l++]<<8|h[l++]<<16|h[l++]<<24)>>>0;(a.length&4294967295)!==d&&n(Error("invalid input size: "+(a.length&4294967295)+" / "+d));this.m.push(c);this.c=l}this.s=!0;var y=this.m,s,M,S=0,T=0,C;s=0;for(M=y.length;s<M;++s)T+=y[s].data.length;if(u){C=new Uint8Array(T);for(s=0;s<M;++s)C.set(y[s].data,S),S+=y[s].data.length}else{C=[];for(s=0;s<M;++s)C[s]=y[s].data;C=Array.prototype.concat.apply([],C)}return C};r("Zlib.Gunzip",$);r("Zlib.Gunzip.prototype.decompress",$.prototype.g);r("Zlib.Gunzip.prototype.getMembers",$.prototype.G);}).call(this); 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 module.exports={
   "name": "kuromoji",
   "description": "JavaScript implementation of Japanese morphological analyzer",
-  "version": "0.1.2",
+  "version": "0.2.2",
   "author": "Takuya Asano <takuya.a@gmail.com>",
   "browser": {
     "./src/loader/NodeDictionaryLoader.js": "./src/loader/BrowserDictionaryLoader.js"
@@ -6783,7 +7080,7 @@ module.exports={
   }
 }
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -6803,6 +7100,8 @@ module.exports={
 
 "use strict";
 
+var jaCodeMap = require('jaCodeMap');
+
 var ViterbiBuilder = require("./viterbi/ViterbiBuilder");
 var ViterbiSearcher = require("./viterbi/ViterbiSearcher");
 var IpadicFormatter = require("./util/IpadicFormatter");
@@ -6815,11 +7114,11 @@ var PUNCTUATION = /、|。/;
  * @constructor
  */
 function Tokenizer(dic) {
-    this.token_info_dictionary = dic.token_info_dictionary;
-    this.unknown_dictionary = dic.unknown_dictionary;
-    this.viterbi_builder = new ViterbiBuilder(dic);
-    this.viterbi_searcher = new ViterbiSearcher(dic.connection_costs);
-    this.formatter = new IpadicFormatter();  // TODO Other dictionaries
+  this.token_info_dictionary = dic.token_info_dictionary;
+  this.unknown_dictionary = dic.unknown_dictionary;
+  this.viterbi_builder = new ViterbiBuilder(dic);
+  this.viterbi_searcher = new ViterbiSearcher(dic.connection_costs);
+  this.formatter = new IpadicFormatter();  // TODO Other dictionaries
 }
 
 /**
@@ -6827,22 +7126,44 @@ function Tokenizer(dic) {
  * @param {string} input Input text
  * @returns {Array.<string>} Sentences end with punctuation
  */
-Tokenizer.splitByPunctuation = function (input) {
-    var sentences = [];
-    var tail = input;
-    while (true) {
-        if (tail === "") {
-            break;
-        }
-        var index = tail.search(PUNCTUATION);
-        if (index < 0) {
-            sentences.push(tail);
-            break;
-        }
-        sentences.push(tail.substring(0, index + 1));
-        tail = tail.substring(index + 1);
+Tokenizer.splitByPunctuation = function(input) {
+  var sentences = [];
+  var tail = input;
+  while (true) {
+    if (tail === "") {
+      break;
     }
-    return sentences;
+    var index = tail.search(PUNCTUATION);
+    if (index < 0) {
+      sentences.push(tail);
+      break;
+    }
+    sentences.push(tail.substring(0, index + 1));
+    tail = tail.substring(index + 1);
+  }
+  return sentences;
+};
+
+/**
+ * 一般的な名詞を抽出するユーティリティ
+ */
+Tokenizer.prototype.auto = function(text) {
+  var map = {
+    '一般': true,
+    '固有名詞': true,
+    '数': true,
+    'サ変接続': true,
+    '形容動詞語幹': true,
+    '副詞可能': true
+  };
+  text = jaCodeMap.auto(text).toLowerCase();
+  var tokens = this.tokenize(text);
+  return Object.keys(tokens.reduce(function(memo, token) {
+    if (map[token.pos_detail_1]) {
+      memo[token.surface_form] = true;
+    }
+    return memo;
+  }, {}));
 };
 
 /**
@@ -6850,57 +7171,57 @@ Tokenizer.splitByPunctuation = function (input) {
  * @param {string} text Input text to analyze
  * @returns {Array} Tokens
  */
-Tokenizer.prototype.tokenize = function (text) {
-    var sentences = Tokenizer.splitByPunctuation(text);
-    var tokens = [];
-    for (var i = 0; i < sentences.length; i++) {
-        var sentence = sentences[i];
-        this.tokenizeForSentence(sentence, tokens);
-    }
-    return tokens;
+Tokenizer.prototype.tokenize = function(text) {
+  var sentences = Tokenizer.splitByPunctuation(text);
+  var tokens = [];
+  for (var i = 0; i < sentences.length; i++) {
+    var sentence = sentences[i];
+    this.tokenizeForSentence(sentence, tokens);
+  }
+  return tokens;
 };
 
-Tokenizer.prototype.tokenizeForSentence = function (sentence, tokens) {
-    if (tokens == null) {
-        tokens = [];
-    }
-    var lattice = this.getLattice(sentence);
-    var best_path = this.viterbi_searcher.search(lattice);
-    var last_pos = 0;
-    if (tokens.length > 0) {
-        last_pos = tokens[tokens.length - 1].word_position;
-    }
+Tokenizer.prototype.tokenizeForSentence = function(sentence, tokens) {
+  if (tokens == null) {
+    tokens = [];
+  }
+  var lattice = this.getLattice(sentence);
+  var best_path = this.viterbi_searcher.search(lattice);
+  var last_pos = 0;
+  if (tokens.length > 0) {
+    last_pos = tokens[tokens.length - 1].word_position;
+  }
 
-    for (var j = 0; j < best_path.length; j++) {
-        var node = best_path[j];
+  for (var j = 0; j < best_path.length; j++) {
+    var node = best_path[j];
 
-        var token, features, features_line;
-        if (node.type === "KNOWN") {
-            features_line = this.token_info_dictionary.getFeatures(node.name);
-            if (features_line == null) {
-                features = [];
-            } else {
-                features = features_line.split(",");
-            }
-            token = this.formatter.formatEntry(node.name, last_pos + node.start_pos, node.type, features);
-        } else if (node.type === "UNKNOWN") {
-            // Unknown word
-            features_line = this.unknown_dictionary.getFeatures(node.name);
-            if (features_line == null) {
-                features = [];
-            } else {
-                features = features_line.split(",");
-            }
-            token = this.formatter.formatUnknownEntry(node.name, last_pos + node.start_pos, node.type, features, node.surface_form);
-        } else {
-            // TODO User dictionary
-            token = this.formatter.formatEntry(node.name, last_pos + node.start_pos, node.type, []);
-        }
-
-        tokens.push(token);
+    var token, features, features_line;
+    if (node.type === "KNOWN") {
+      features_line = this.token_info_dictionary.getFeatures(node.name);
+      if (features_line == null) {
+        features = [];
+      } else {
+        features = features_line.split(",");
+      }
+      token = this.formatter.formatEntry(node.name, last_pos + node.start_pos, node.type, features);
+    } else if (node.type === "UNKNOWN") {
+      // Unknown word
+      features_line = this.unknown_dictionary.getFeatures(node.name);
+      if (features_line == null) {
+        features = [];
+      } else {
+        features = features_line.split(",");
+      }
+      token = this.formatter.formatUnknownEntry(node.name, last_pos + node.start_pos, node.type, features, node.surface_form);
+    } else {
+      // TODO User dictionary
+      token = this.formatter.formatEntry(node.name, last_pos + node.start_pos, node.type, []);
     }
 
-    return tokens;
+    tokens.push(token);
+  }
+
+  return tokens;
 };
 
 /**
@@ -6908,13 +7229,13 @@ Tokenizer.prototype.tokenizeForSentence = function (sentence, tokens) {
  * @param {string} text Input text to analyze
  * @returns {ViterbiLattice} Word lattice
  */
-Tokenizer.prototype.getLattice = function (text) {
-    return this.viterbi_builder.build(text);
+Tokenizer.prototype.getLattice = function(text) {
+  return this.viterbi_builder.build(text);
 };
 
 module.exports = Tokenizer;
 
-},{"./util/IpadicFormatter":23,"./viterbi/ViterbiBuilder":25,"./viterbi/ViterbiSearcher":28}],8:[function(require,module,exports){
+},{"./util/IpadicFormatter":24,"./viterbi/ViterbiBuilder":26,"./viterbi/ViterbiSearcher":29,"jaCodeMap":3}],9:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -6971,7 +7292,7 @@ TokenizerBuilder.prototype.build = function (callback) {
 
 module.exports = TokenizerBuilder;
 
-},{"./Tokenizer":7,"./loader/NodeDictionaryLoader":20}],9:[function(require,module,exports){
+},{"./Tokenizer":8,"./loader/NodeDictionaryLoader":21}],10:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7010,7 +7331,7 @@ function CharacterClass(class_id, class_name, is_always_invoke, is_grouping, max
 
 module.exports = CharacterClass;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7217,7 +7538,7 @@ CharacterDefinition.prototype.lookup = function (ch) {
 
 module.exports = CharacterDefinition;
 
-},{"../util/SurrogateAwareString":24,"./CharacterClass":9,"./InvokeDefinitionMap":13}],11:[function(require,module,exports){
+},{"../util/SurrogateAwareString":25,"./CharacterClass":10,"./InvokeDefinitionMap":14}],12:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7278,7 +7599,7 @@ ConnectionCosts.prototype.loadConnectionCosts = function (connection_costs_buffe
 
 module.exports = ConnectionCosts;
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7362,7 +7683,7 @@ DynamicDictionaries.prototype.loadUnknownDictionaries = function (unk_buffer, un
 
 module.exports = DynamicDictionaries;
 
-},{"./ConnectionCosts":11,"./TokenInfoDictionary":14,"./UnknownDictionary":15,"doublearray":2}],13:[function(require,module,exports){
+},{"./ConnectionCosts":12,"./TokenInfoDictionary":15,"./UnknownDictionary":16,"doublearray":2}],14:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7474,7 +7795,7 @@ InvokeDefinitionMap.prototype.toBuffer = function () {
 
 module.exports = InvokeDefinitionMap;
 
-},{"../util/ByteBuffer":22,"./CharacterClass":9}],14:[function(require,module,exports){
+},{"../util/ByteBuffer":23,"./CharacterClass":10}],15:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7628,7 +7949,7 @@ TokenInfoDictionary.prototype.getFeatures = function (token_info_id_str) {
 
 module.exports = TokenInfoDictionary;
 
-},{"../util/ByteBuffer":22}],15:[function(require,module,exports){
+},{"../util/ByteBuffer":23}],16:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7688,7 +8009,7 @@ UnknownDictionary.prototype.loadUnknownDictionaries = function (unk_buffer, unk_
 
 module.exports = UnknownDictionary;
 
-},{"../util/ByteBuffer":22,"./CharacterDefinition":10,"./TokenInfoDictionary":14}],16:[function(require,module,exports){
+},{"../util/ByteBuffer":23,"./CharacterDefinition":11,"./TokenInfoDictionary":15}],17:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7758,7 +8079,7 @@ CharacterDefinitionBuilder.prototype.build = function () {
 
 module.exports = CharacterDefinitionBuilder;
 
-},{"../CharacterDefinition":10,"../InvokeDefinitionMap":13}],17:[function(require,module,exports){
+},{"../CharacterDefinition":11,"../InvokeDefinitionMap":14}],18:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7830,7 +8151,7 @@ ConnectionCostsBuilder.prototype.build = function () {
 
 module.exports = ConnectionCostsBuilder;
 
-},{"../ConnectionCosts":11}],18:[function(require,module,exports){
+},{"../ConnectionCosts":12}],19:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -7990,7 +8311,7 @@ DictionaryBuilder.prototype.buildDoubleArray = function () {
 
 module.exports = DictionaryBuilder;
 
-},{"../DynamicDictionaries":12,"../TokenInfoDictionary":14,"../UnknownDictionary":15,"./CharacterDefinitionBuilder":16,"./ConnectionCostsBuilder":17,"doublearray":2}],19:[function(require,module,exports){
+},{"../DynamicDictionaries":13,"../TokenInfoDictionary":15,"../UnknownDictionary":16,"./CharacterDefinitionBuilder":17,"./ConnectionCostsBuilder":18,"doublearray":2}],20:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8026,7 +8347,7 @@ var kuromoji = {
 
 module.exports = kuromoji;
 
-},{"../package.json":6,"./TokenizerBuilder":8,"./dict/builder/DictionaryBuilder":18}],20:[function(require,module,exports){
+},{"../package.json":7,"./TokenizerBuilder":9,"./dict/builder/DictionaryBuilder":19}],21:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8094,7 +8415,7 @@ BrowserDictionaryLoader.prototype.loadArrayBuffer = function (url, callback) {
 
 module.exports = BrowserDictionaryLoader;
 
-},{"./DictionaryLoader":21,"zlibjs/bin/gunzip.min.js":5}],21:[function(require,module,exports){
+},{"./DictionaryLoader":22,"zlibjs/bin/gunzip.min.js":6}],22:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8233,7 +8554,7 @@ DictionaryLoader.prototype.load = function (load_callback) {
 
 module.exports = DictionaryLoader;
 
-},{"../dict/DynamicDictionaries":12,"async":1,"path":3}],22:[function(require,module,exports){
+},{"../dict/DynamicDictionaries":13,"async":1,"path":4}],23:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8520,7 +8841,7 @@ ByteBuffer.prototype.getString = function (index) {
 
 module.exports = ByteBuffer;
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8589,7 +8910,7 @@ IpadicFormatter.prototype.formatUnknownEntry = function (word_id, position, type
 
 module.exports = IpadicFormatter;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8682,7 +9003,7 @@ SurrogateAwareString.isSurrogatePair = function (ch) {
 
 module.exports = SurrogateAwareString;
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8785,7 +9106,7 @@ ViterbiBuilder.prototype.build = function (sentence_str) {
 
 module.exports = ViterbiBuilder;
 
-},{"../util/SurrogateAwareString":24,"./ViterbiLattice":26,"./ViterbiNode":27}],26:[function(require,module,exports){
+},{"../util/SurrogateAwareString":25,"./ViterbiLattice":27,"./ViterbiNode":28}],27:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8847,7 +9168,7 @@ ViterbiLattice.prototype.appendEos = function () {
 
 module.exports = ViterbiLattice;
 
-},{"./ViterbiNode":27}],27:[function(require,module,exports){
+},{"./ViterbiNode":28}],28:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -8898,7 +9219,7 @@ function ViterbiNode(node_name, node_cost, start_pos, length, type, left_id, rig
 
 module.exports = ViterbiNode;
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /*
  * Copyright 2014 Takuya Asano
  * Copyright 2010-2014 Atilika Inc. and contributors
@@ -9002,5 +9323,5 @@ ViterbiSearcher.prototype.backward = function (lattice) {
 
 module.exports = ViterbiSearcher;
 
-},{}]},{},[19])(19)
+},{}]},{},[20])(20)
 });
