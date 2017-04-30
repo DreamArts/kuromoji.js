@@ -81,8 +81,19 @@ Tokenizer.prototype.auto = function(text) {
   return Object.keys(tokens.reduce(function(memo, token) {
     if (automap[token.pos_detail_1]) {
       var key = (token.word_type === 'KNOWN') ? token.basic_form : token.surface_form;
-      if (!autostop[key])
+      if (!autostop[key]) {
+
+        // JISでは2音以下の単語は長音記号を省略せず、3音以上の単語は長音記号を省略する
+        if (3 < key.length) {
+          // カバー
+          // エラー
+          // コンピューター → コンピュータ
+          // メモリー      → メモリ
+          key = key.replace(/ー$/, '');
+        }
+
         memo[key] = true;
+      }
     }
     return memo;
   }, {}));

@@ -7010,7 +7010,7 @@ d=(h[l++]|h[l++]<<8|h[l++]<<16|h[l++]<<24)>>>0;(a.length&4294967295)!==d&&n(Erro
 module.exports={
   "name": "kuromoji",
   "description": "JavaScript implementation of Japanese morphological analyzer",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "author": "Takuya Asano <takuya.a@gmail.com>",
   "browser": {
     "./src/loader/NodeDictionaryLoader.js": "./src/loader/BrowserDictionaryLoader.js"
@@ -7164,8 +7164,19 @@ Tokenizer.prototype.auto = function(text) {
   return Object.keys(tokens.reduce(function(memo, token) {
     if (automap[token.pos_detail_1]) {
       var key = (token.word_type === 'KNOWN') ? token.basic_form : token.surface_form;
-      if (!autostop[key])
+      if (!autostop[key]) {
+
+        // JISでは2音以下の単語は長音記号を省略せず、3音以上の単語は長音記号を省略する
+        if (3 < key.length) {
+          // カバー
+          // エラー
+          // コンピューター → コンピュータ
+          // メモリー      → メモリ
+          key = key.replace(/ー$/, '');
+        }
+
         memo[key] = true;
+      }
     }
     return memo;
   }, {}));
